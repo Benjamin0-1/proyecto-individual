@@ -34,7 +34,7 @@ const Landing = () => {
       <Link to='/driverform'>
         <button id='HomeButton2'> Crear un conductor </button>
       </Link>
-    {console.log('DARKMODE: ', darkMode)}
+    {/*{console.log('DARKMODE: ', darkMode)} */}
       <label>
         Dark Mode
         <Switch onChange={toggleDarkMode} checked={darkMode} />

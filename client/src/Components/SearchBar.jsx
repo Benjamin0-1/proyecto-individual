@@ -24,7 +24,7 @@ function SearchBar({ onSearch, onToggleAlphabeticalOrder }) {
       />
       <button onClick={handleSearch}>Search</button>
       <button onClick={handleToggleAlphabeticalOrderClick}>
-        Toggle Alphabetical Order
+        Activar orden alfabetico
       </button>
     </div>
   );

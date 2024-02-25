@@ -28,9 +28,9 @@ function DriverProfile() {
     <div className='Detail'>
       <h2>Driver Profile</h2>
       <p>ID: {driver.id}</p>
-      <p>Nombre: {driver.name.forename}</p>
-      <p>Apellido: {driver.name.surname}</p>
-      <p>Descripcion: {driver.description}</p>
+      <p>Nombre: {driver.name.forename || 'No hay nombre disponible'}</p>
+      <p>Apellido: {driver.name.surname || 'No hay apellido disponible'}</p>
+      <p>Descripcion: {driver.description || 'No hay descripcion disponible'}</p>
       {/* Check if driver.image is defined and has a url property */}
       {driver.image && typeof driver.image === 'object' && driver.image.url ? (
         <img src={driver.image.url} alt={driver.name.forename} />
