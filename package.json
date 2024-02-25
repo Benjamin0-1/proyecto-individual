@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4"
+  },
+  "dependencies": {
+    "react-redux": "^9.1.0",
+    "redux": "^5.0.1"
+  }
+}
