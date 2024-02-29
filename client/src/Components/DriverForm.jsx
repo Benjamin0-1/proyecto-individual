@@ -10,6 +10,7 @@ import darkModeStyles from './dark-mode.module.css';
 
 const DriverForm = () => {
   //const [darkMode, setDarkMode] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(null);
 
   const dispatch = useDispatch();
   //const darkMode = useSelector((state) => state.darkMode);
@@ -42,8 +43,16 @@ const DriverForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  
+    if (name === 'teams') {
+    
+      const teamIds = value.split(',').map((id) => id.trim());
+      setFormData((prevData) => ({ ...prevData, [name]: teamIds }));
+    } else {
+      setFormData((prevData) => ({ ...prevData, [name]: value }));
+    }
   };
+  
 
 
 
@@ -72,12 +81,10 @@ const DriverForm = () => {
   
 
   const handleSubmit = async (e) => {
+
     e.preventDefault();
-   
-    //if (formData.teams.length === 0) {
-      //setErrors((prevErrors) => ({ ...prevErrors, teams: 'Error: Debe seleccionar al menos un equipo' }));
-      //return;
-    //}
+
+  //}; // 
 
 if (!isValidName(formData.name)) {
   setErrors((prevErrors) => ({ ...prevErrors, name: 'Error: Nombre debe tener al menos 3 caracteres' }));
@@ -125,7 +132,7 @@ if (!isValidDescription(formData.description)) {
       });
       if (response.ok) {
         console.log('Driver created successfully');
-        
+        setIsSuccess(true)
         setFormData({
           name: '',
           lastName: '',
@@ -137,6 +144,7 @@ if (!isValidDescription(formData.description)) {
         });
       } else {
         console.error('Failed to create driver:', response.statusText);
+        setIsSuccess(false);
       }
     } catch (error) {
       console.error('Error creating driver:', error);
@@ -182,6 +190,13 @@ if (!isValidDescription(formData.description)) {
         </label>
   
         <button type="submit">Create Driver</button>
+
+        {isSuccess !== null && (
+          <h2 style={{ color: isSuccess ? 'green' : 'red' }}>
+            {isSuccess ? 'Conductor creado con exito' : 'Error creando conductor'}
+          </h2>
+        )}
+
       </form>
     </div>
   );

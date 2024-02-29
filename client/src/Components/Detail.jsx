@@ -28,17 +28,17 @@ function DriverProfile() {
     <div className='Detail'>
       <h2>Driver Profile</h2>
       <p>ID: {driver.id}</p>
-      <p>Nombre: {driver.name.forename}</p>
-      <p>Apellido: {driver.name.surname}</p>
-      <p>Descripcion: {driver.description}</p>
-      {/* Check if driver.image is defined and has a url property */}
+      <p>Nombre: {driver.name.forename || 'No hay nombre disponible'}</p>
+      <p>Apellido: {driver.name.surname || 'No hay apellido disponible'}</p>
+      <p>Descripcion: {driver.description || 'No hay descripcion disponible'}</p>
+  
       {driver.image && typeof driver.image === 'object' && driver.image.url ? (
         <img src={driver.image.url} alt={driver.name.forename} />
       ) : (
         <img src="https://c8.alamy.com/comp/DNM9P1/a-vector-illustration-of-a-race-car-driver-in-front-of-his-car-DNM9P1.jpg" alt="Imagen por defecto" />
       )}
-      <p>Fecha de nacimiento: {driver.birthDate}</p>
-      <p>Escuderia: {driver.teams}</p>
+      <p>Fecha de nacimiento: {driver.dob || 'No hay fecha de nacimiento disponible'} </p>
+      <p>Escuderia: {driver.teams || 'No hay equipo disponible'}</p>
     </div>
   );
   

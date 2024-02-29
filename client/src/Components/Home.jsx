@@ -27,6 +27,13 @@ function Home() {
   //const darkMode = useSelector((state) => state.darkMode);
   const darkMode = useSelector((state) => state.darkMode.darkMode);
   const driversFromRedux = useSelector((state) => state.drivers.drivers);
+  const [isReversedSorting, setIsReversedSorting] = useState(false);
+  const [inputBirthDate, setInputBirthDate] = useState('');
+
+  const [invalidDateFormatError, setInvalidDateFormatError] = useState(false);
+  const [noDriverFoundError, setNoDriverFoundError] = useState(false);
+
+
 
   const driversPerPage = 9;
   const apiUrl = 'http://localhost:5000';
@@ -64,7 +71,41 @@ function Home() {
      }};
 
 
+  const handleFilterByBirthDate = () => {
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
+      if (!dateRegex.test(inputBirthDate)) {
+        setInvalidDateFormatError(true);
+        setNoDriverFoundError(false);
+        return;
+      };    
+
+      const trimmedInputBirthDate = inputBirthDate.trim();
+    
+      const filtered = drivers.filter((driver) => {
+        try {
+          const driverBirthDate = driver.dob;
+    
+          // Check if birth-dates match
+          return (
+            driverBirthDate ===
+            (isNaN(Date.parse(driverBirthDate)) ? 'Invalid Date' : trimmedInputBirthDate)
+          );
+        } catch (error) {
+          console.error('Error parsing date:', error);
+          console.log('Driver:', driver);
+          console.log('Trimmed Input Birth Date:', trimmedInputBirthDate);
+          return false; // Filter out the driver if there's an error parsing the date
+        }
+      });
+    
+      setFilteredDrivers(filtered);
+
+      setInvalidDateFormatError(false);
+      setNoDriverFoundError(filtered.length === 0);
+
+    };
+       
 
   const toggleDarkMode = () => {
     dispatch(setDarkMode(!darkMode));
@@ -72,24 +113,58 @@ function Home() {
   
 
   const applySorting = () => {
-    console.log('Orden alfabetico  ');
+    console.log('Applying Sorting');
   
     let sorted = [...filteredDrivers];
   
     if (sortBy === 'name') {
-      sorted.sort((a, b) => a.name.forename.localeCompare(b.name.forename));
+      sorted.sort((a, b) => {
+        const forenameA = a.name && a.name.forename ? a.name.forename : '';
+        const forenameB = b.name && b.name.forename ? b.name.forename : '';
+        return forenameA.localeCompare(forenameB);
+      });
     } else if (sortBy === 'birthdate') {
       sorted.sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate));
     }
   
     if (isAlphabeticalOrder) {
+
       sorted.reverse();
+    } else {
+
+      sorted.sort((a, b) => {
+        const forenameA = a.name && a.name.forename ? a.name.forename : '';
+        const forenameB = b.name && b.name.forename ? b.name.forename : '';
+        return forenameA.localeCompare(forenameB);
+      });
     }
   
     setFilteredDrivers(sorted);
     console.log(sorted);
-    setNeedsSorting(false); 
-  }
+    setNeedsSorting(false);
+  };
+  
+  // mostrar desde el ultimo driver hasta el primero.
+  const handleApplySortingReversed = () => {
+    applySortingReversed(); // Assuming applySortingReversed is your existing function for reversed sorting
+    setIsReversedSorting((prev) => !prev); // Toggle the state
+  };
+  
+  const applySortingReversed = () => {
+    let sortedDrivers = [...drivers];
+  
+    if (isReversedSorting) {
+      // Apply reversed sorting
+      sortedDrivers.sort((a, b) => b.id - a.id);
+    } else {
+      // Apply original sorting
+      sortedDrivers.sort((a, b) => a.id - b.id);
+    }
+  
+    setFilteredDrivers(sortedDrivers);
+    setNeedsSorting(false);
+  };
+    
   
 
   const handleButtonClick = () => {
@@ -125,8 +200,10 @@ function Home() {
 
   const handleToggleAlphabeticalOrder = () => {
     setIsAlphabeticalOrder((prev) => !prev);
-    setNeedsSorting(true); // arreglar 
+    setNeedsSorting(true);
+    applySorting(); // aplicar
   };
+  
 
   const applyFilters = () => {
     let filtered = drivers;
@@ -152,38 +229,19 @@ function Home() {
 
   const handleFilterByTeam = () => {
     const filtered = drivers.filter((driver) => {
-      if (driver.teams) {
-        if (Array.isArray(driver.teams)) {
-          console.log('Teams is an array:', driver.teams);
-          // Check if the teams array includes the inputTeam
-          return driver.teams.some((team) => {
-            console.log('Checking team:', team);
-            return team.toLowerCase().includes(inputTeam.toLowerCase());
-          });
-        } else if (typeof driver.teams === 'string') {
-          console.log('Teams is a string:', driver.teams);
-          // Convert the teams string to an array and check inclusion
-          const teamsArray = driver.teams.split(',').map((team) => team.trim());
-          return teamsArray.some((team) => {
-            console.log('Checking team:', team);
-            return team.toLowerCase().includes(inputTeam.toLowerCase());
-          });
-        }
+      // Check if driver.teams is a string and not an empty string
+      if (typeof driver.teams === 'string' && driver.teams.trim().length > 0) {
+        const teamsArray = driver.teams.split(',').map((team) => team.trim());
+        
+        return teamsArray.some((team) => team.toLowerCase().includes(inputTeam.toLowerCase()));
       }
-  
-      // Include drivers with no teams
+      
+   
       return true;
     });
   
-    console.log('Original drivers:', drivers);
-    console.log('Filtered drivers:', filtered);
-    setFilteredDrivers(filtered);
-  };
-  
-  
-  
-  
-
+    setFilteredDrivers(filtered); 
+  };  
   //useEffects 
   useEffect(() => {
     const fetchData = async () => {
@@ -204,15 +262,18 @@ function Home() {
     };
   
     fetchData();
-  
-    
+
   }, []); 
   
   
   useEffect(() => {
-    applyFilters();
-  }, [selectedTeam, inputTeam, selectedOrigin, drivers, currentPage]);
+
+    if (selectedTeam || inputTeam || selectedOrigin || inputBirthDate|| currentPage || drivers.length > 0) {
+      applyFilters();
+    }
+  }, [selectedTeam, inputTeam, selectedOrigin, drivers, currentPage]); // filteredDrivers
   
+
   useEffect(() => {
     if (needsSorting) {
       applySorting();
@@ -225,35 +286,47 @@ function Home() {
     <div className={`Home ${darkMode ? 'dark-mode' : ''}`}>
 
       <SearchBar onSearch={handleSearchBar} onToggleAlphabeticalOrder={handleToggleAlphabeticalOrder} />
-      <label>
-        Dark Mode
-        <Switch onChange={toggleDarkMode} checked={darkMode} />
-      </label>
-  
-      <div>
-        {/*<button onClick={() => setSortBy('name')}>Sort by Name</button>*/}
-        {/*<button onClick={() => setSortBy('birthdate')}>Sort by Birthdate</button>*/}
-      </div>
-  
       <div>
         <button onClick={() => setSelectedOrigin('API')}>API</button>
         <button onClick={() => setSelectedOrigin('Database')}>Database</button>
       </div>
 
+      <label>
+        Dark Mode
+        <Switch onChange={toggleDarkMode} checked={darkMode} />
+      </label>
+      
+      <div>
+      <button onClick={handleApplySortingReversed}>
+      {isReversedSorting ? "Ordenar al reves" : "Orden original"}
+      </button>
 
+    </div>
 
       <div>
         <input
           type="text"
-          placeholder="Filter By Team"
+          placeholder="Filtrar por equipo"
           value={inputTeam}
           onChange={(e) => setInputTeam(e.target.value)}
         />
-        <button onClick={handleFilterByTeam}>Apply Team Filter</button>
-        
-   
+        <button onClick={handleFilterByTeam}>Aplicar filtrado por equipo</button>     
       </div>
-  
+
+      <div>
+
+      <input
+        type="text"
+        placeholder="Filtar por fecha de nacimiento (YYYY-MM-DD)"
+        value={inputBirthDate}
+        onChange={(e) => setInputBirthDate(e.target.value)}
+      />
+      <button onClick={handleFilterByBirthDate}>Aplicar filtrado por fecha de nacimiento</button>
+      {invalidDateFormatError && <p style={{ color: 'red' }}>Formato de fecha invalido</p>}
+      {noDriverFoundError && <p style={{ color: 'red' }}>No hay conductor con esa fecha de nacimiento</p>}
+    </div>
+
+
       <div className="driver-cards">
         {(filteredDrivers.length > 0 ? filteredDrivers : drivers)
           .slice((currentPage - 1) * driversPerPage, currentPage * driversPerPage)
@@ -276,22 +349,21 @@ function Home() {
   
       <div>
         <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}>
-          Previous Page
+          Pagina Previa
         </button>
         <span>Page {currentPage}</span>
         <button
           onClick={() => setCurrentPage(currentPage + 1)}
           disabled={currentPage * driversPerPage >= (filteredDrivers.length > 0 ? filteredDrivers : drivers).length}
         >
-          Next Page
+          Siguiente Pagina
         </button>
       </div>
-      
 
     </div>
   );
   
-
+  
 
 }
 

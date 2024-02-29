@@ -45,9 +45,6 @@ router.get('/', async (req, res) => {
 
 
 
-
-
-
 // ruta Adicional para crear un equipo
 router.post('/createteam', async(req,res) =>{
     const name = req.body.name;

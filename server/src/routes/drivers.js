@@ -77,7 +77,7 @@ router.get('/name', async (req, res) => {
 
     const allDrivers = [...dbDrivers, ...apiDrivers];
 
-    res.json(apiDrivers);
+    res.json(allDrivers);
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: 'Error de servidor desde catch en /name' });
