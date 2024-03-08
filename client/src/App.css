@@ -40,3 +40,41 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Add these styles to your existing CSS file or create a new one */
+.driver-card-link {
+  text-decoration: none;
+  color: inherit; /* Inherit the color from the parent */
+}
+
+.driver-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+
+  /* Ensure a consistent height for each card */
+  height: 300px;
+}
+
+.driver-image {
+  width: 100%;
+  height: 150px; /* Adjust the height as needed */
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.driver-details {
+  margin-top: 12px;
+}
+
+.driver-name {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.driver-teams {
+  font-size: 14px;
+}

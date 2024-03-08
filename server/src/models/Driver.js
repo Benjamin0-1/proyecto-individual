@@ -30,7 +30,7 @@ module.exports = (sequelize) => {
       allowNull: false,
     },
     birthDate: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: false,
     },
   });

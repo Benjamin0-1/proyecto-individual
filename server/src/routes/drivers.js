@@ -11,13 +11,13 @@ router.get('/', async (req, res) => {
     console.log(dbbCount);
 
     if (dbbCount === 0) {
-      const response = await fetch('http://localhost:5000/drivers');
+      const response = await fetch('http://localhost:5000/drivers');  
       const data = await response.json();
       return res.json(data); 
     }
 
     const drivers = await Driver.findAll({
-      include: Team, // Is it required to include teams?
+      include: Team, // requerido
     });
 
  
@@ -53,6 +53,9 @@ router.get('/:idDriver', async (req, res) => {
     }
 });
 
+// ruta para solucionar BUG de confusion de ID
+
+
 
 // es la misma que: router.get('/searchname/name', async(req, res) => {
 router.get('/name', async (req, res) => {
@@ -85,7 +88,13 @@ router.get('/name', async (req, res) => {
 });
 
 
+let lastDriverId = 999;
+// Your existing route to create a new driver
 router.post('/', async (req, res) => {
+  try {
+    
+    const newDriverId = ++lastDriverId; // 
+
     const {
       name,
       lastName,
@@ -93,45 +102,43 @@ router.post('/', async (req, res) => {
       image,
       nationality,
       birthDate,
-      teams, // Array de IDs de los equipos asociados al conductor
+      teams, 
     } = req.body;
-  
-    try {
-      const newDriver = await Driver.create({
-        name,
-        lastName,
-        description,
-        image,
-        nationality,
-        birthDate,
-      });
-  
-  
-      // Asociar el conductor con los equipos indicados
-      if (teams && teams.length > 0) {
-        await newDriver.addTeams(teams);
-      }
-  
-      const createdDriver = await Driver.findByPk(newDriver.id, {
-        include: Team,
-      });
-  
-      res.status(201).json(createdDriver);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Error de servidor' });
-    }
-  });
 
-module.exports = router;
+    const newDriver = await Driver.create({
+      id: newDriverId,
+      name,
+      lastName,
+      description,
+      image,
+      nationality,
+      birthDate,
+    });
+
+    if (teams && teams.length > 0) {
+      await newDriver.addTeams(teams); // 
+    }
+
+    const createdDriver = await Driver.findByPk(newDriver.id, {
+      include: Team,
+    });
+
+    res.status(201).json(createdDriver);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
 
 
 //debug : /name por query.
-router.get('/searchname/name', async(req, res) => {
+router.get('/searchname/name', async (req, res) => {
   try {
     const { name } = req.query;
 
-    const dbDriversPromise = Driver.findAll({
+    const dbDrivers = await Driver.findAll({
       where: {
         name: {
           [Op.iLike]: `%${name}%`,
@@ -141,17 +148,22 @@ router.get('/searchname/name', async(req, res) => {
       include: Team,
     });
 
-    const apiDriversPromise = fetch(`http://localhost:5000/drivers?name.forename=${name}`)
-      .then(response => response.json());
+    const apiResponse = await fetch(`http://localhost:5000/drivers?name.forename=${name}`);
+    const apiDrivers = await apiResponse.json();
 
-    const [dbDrivers, apiDrivers] = await Promise.all([dbDriversPromise, apiDriversPromise]);
+     // Transform Sequelize instances to plain objects
+     const formattedDbDrivers = dbDrivers.map(driver => driver.get({ plain: true }));
 
-    const allDrivers = [...dbDrivers, ...apiDrivers];
+    const allDrivers = Array.isArray(apiDrivers) ? [...dbDrivers, ...apiDrivers] : dbDrivers;
 
     res.json(allDrivers);
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ error: 'Error de servidor desde catch en /name' });
+    res.status(500).json({ error: 'Server error in /searchname/name' });
   }
 });
+
  // ruta testing ejemplo: http://localhost:3001/drivers/searchname/name?name=Nick
+
+ module.exports = router;
+
